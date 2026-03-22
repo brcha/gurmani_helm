@@ -17,6 +17,55 @@ Kubernetes manifests and Helm configurations for the perseus RKE2 cluster.
 - RKE2 running on perseus with Tailscale overlay
 - `kubectl` configured locally (`~/.kube/config` pointing to `perseus:6443`)
 - Helm 3 installed locally
+- `kubeseal` CLI for sealed secrets (PostgreSQL setup)
+
+## Quick Start with Just
+
+This repository uses [just](https://github.com/casey/just) for task automation.
+
+### Install just
+
+**Windows (PowerShell):**
+```powershell
+# Via scoop
+scoop install just
+
+# Or via chocolatey
+choco install just
+
+# Or via winget
+winget install --id Casey.Just
+```
+
+**Linux:**
+```bash
+# Via package manager (Debian/Ubuntu)
+sudo apt install just
+
+# Or download from releases
+curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+```
+
+### Check Dependencies
+
+Before deploying anything, verify all required tools are installed:
+
+```bash
+just dep-check
+```
+
+This will check for:
+- `kubectl` - Kubernetes CLI
+- `helm` - Helm 3 package manager
+- `kubeseal` - Sealed Secrets CLI
+
+### Available Commands
+
+Run `just` without arguments to see all available commands:
+
+```bash
+just
+```
 
 ## Deployment Order
 
