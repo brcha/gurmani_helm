@@ -1,0 +1,33 @@
+# Secrets and sensitive files - NEVER commit these
+*.secret.yaml
+*.secret.yml
+*-secret.yaml
+*-secret.yml
+secrets/
+secret.yaml
+secret.yml
+
+# Local kubeconfig overrides
+kubeconfig
+*.kubeconfig
+.kube/
+
+# Helm
+*.tgz
+charts/
+.helm/
+
+# Editor artifacts
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak

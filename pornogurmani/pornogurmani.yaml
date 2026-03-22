@@ -1,0 +1,125 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pornogurmani
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pornogurmani
+  template:
+    metadata:
+      labels:
+        app: pornogurmani
+    spec:
+      containers:
+      - name: pornogurmani
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: html
+        configMap:
+          name: pornogurmani-html
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pornogurmani
+  namespace: default
+spec:
+  selector:
+    app: pornogurmani
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pornogurmani-html
+  namespace: default
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Porno Gurmani</title>
+      <style>
+        body {
+          font-family: Georgia, serif;
+          background: #1a1a1a;
+          color: #f5e6d3;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          margin: 0;
+          text-align: center;
+        }
+        h1 { font-size: 3em; color: #e8a87c; margin-bottom: 0.2em; }
+        p { font-size: 1.2em; color: #c9a882; max-width: 500px; line-height: 1.6; }
+        .emoji { font-size: 3em; margin: 0.5em; }
+        .soon {
+          margin-top: 2em;
+          padding: 1em 2em;
+          border: 1px solid #e8a87c;
+          border-radius: 4px;
+          color: #e8a87c;
+          font-size: 0.9em;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="emoji">🍷🍽️👨‍🍳</div>
+      <h1>Porno Gurmani</h1>
+      <p>A secret society of friends, good food, and even better company.</p>
+      <p>Recipes, stories, and culinary adventures — coming soon.</p>
+      <div class="soon">Something delicious is cooking</div>
+    </body>
+    </html>
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pornogurmani
+  namespace: default
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - pornogurmani.com
+    - www.pornogurmani.com
+    secretName: pornogurmani-tls
+  rules:
+  - host: pornogurmani.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: pornogurmani
+            port:
+              number: 80
+  - host: www.pornogurmani.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: pornogurmani
+            port:
+              number: 80
