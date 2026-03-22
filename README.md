@@ -58,6 +58,49 @@ This will check for:
 - `kubectl` - Kubernetes CLI
 - `helm` - Helm 3 package manager
 - `kubeseal` - Sealed Secrets CLI
+- `ssh` - OpenSSH client
+- `tailscale` - Tailscale VPN client
+- `sed` - Stream editor (for kubeconfig modification)
+- `grep` - Pattern matching tool
+
+### Check Tailscale Connectivity
+
+Verify that perseus is visible in your tailscale network:
+
+```bash
+just check-tailscale
+```
+
+This checks if perseus appears in `tailscale status` output.
+
+### Get Kubeconfig
+
+Fetch the kubeconfig from perseus and configure it for remote access:
+
+```bash
+just get-kubeconfig
+```
+
+This will:
+1. Run dependency checks (kubectl, helm, kubeseal, ssh, tailscale, sed, grep)
+2. Verify perseus is visible in tailscale network
+3. SSH to root@perseus and fetch `/etc/rancher/rke2/rke2.yaml`
+4. Replace `server: https://127.0.0.1:6443` with `server: https://perseus:6443`
+5. Save to `.kube/config` (project-specific, gitignored)
+
+To use the kubeconfig:
+
+**PowerShell:**
+```powershell
+$env:KUBECONFIG = "$(pwd)\.kube\config"
+kubectl get nodes
+```
+
+**Bash:**
+```bash
+export KUBECONFIG=$(pwd)/.kube/config
+kubectl get nodes
+```
 
 ### Available Commands
 

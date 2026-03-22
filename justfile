@@ -12,148 +12,44 @@ dep-check:
 # Dependency check for Windows (PowerShell)
 _dep-check-windows:
     #!powershell.exe
-    $ErrorActionPreference = "Stop"
     $missing = 0
-    
     Write-Host "Checking dependencies..."
-    
-    # Check kubectl
-    if (Get-Command kubectl -ErrorAction SilentlyContinue) {
-        try {
-            $kubectlOutput = kubectl version --client 2>$null | Select-String "Client Version"
-            if ($kubectlOutput -and ($kubectlOutput -match 'v\d+\.\d+\.\d+')) {
-                $version = $Matches[0]
-                Write-Host "✓ kubectl found ($version)" -ForegroundColor Green
-            } else {
-                Write-Host "✗ kubectl found but version extraction failed - please verify installation" -ForegroundColor Red
-                $missing = 1
-            }
-        } catch {
-            Write-Host "✗ kubectl found but version extraction failed - please verify installation" -ForegroundColor Red
-            $missing = 1
-        }
-    } else {
-        Write-Host "✗ kubectl missing - install from https://kubernetes.io/docs/tasks/tools/" -ForegroundColor Red
-        $missing = 1
-    }
-    
-    # Check helm
-    if (Get-Command helm -ErrorAction SilentlyContinue) {
-        try {
-            $helmOutput = helm version --short 2>$null
-            if ($helmOutput -match 'v\d+\.\d+\.\d+') {
-                $version = $Matches[0]
-                Write-Host "✓ helm found ($version)" -ForegroundColor Green
-            } else {
-                Write-Host "✗ helm found but version extraction failed - please verify installation" -ForegroundColor Red
-                $missing = 1
-            }
-        } catch {
-            Write-Host "✗ helm found but version extraction failed - please verify installation" -ForegroundColor Red
-            $missing = 1
-        }
-    } else {
-        Write-Host "✗ helm missing - install from https://helm.sh/docs/intro/install/" -ForegroundColor Red
-        $missing = 1
-    }
-    
-    # Check kubeseal
-    if (Get-Command kubeseal -ErrorAction SilentlyContinue) {
-        try {
-            $kubesealOutput = kubeseal --version 2>&1
-            if ($kubesealOutput -match '(\d+\.\d+\.\d+)') {
-                $version = "v" + $Matches[1]
-                Write-Host "✓ kubeseal found ($version)" -ForegroundColor Green
-            } else {
-                Write-Host "✗ kubeseal found but version extraction failed - please verify installation" -ForegroundColor Red
-                $missing = 1
-            }
-        } catch {
-            Write-Host "✗ kubeseal found but version extraction failed - please verify installation" -ForegroundColor Red
-            $missing = 1
-        }
-    } else {
-        Write-Host "✗ kubeseal missing - install from https://github.com/bitnami-labs/sealed-secrets/releases" -ForegroundColor Red
-        $missing = 1
-    }
-    
-    # Summary
-    Write-Host ""
-    if ($missing -eq 0) {
-        Write-Host "All dependencies satisfied ✓" -ForegroundColor Green
-        exit 0
-    } else {
-        Write-Host "Some dependencies are missing or have issues. Please fix them and try again." -ForegroundColor Yellow
-        exit 1
-    }
+    if (-not (Get-Command kubectl -ErrorAction SilentlyContinue)) { Write-Host "✗ kubectl missing" -ForegroundColor Red; $missing = 1 } else { Write-Host "✓ kubectl found" -ForegroundColor Green }
+    if (-not (Get-Command helm -ErrorAction SilentlyContinue)) { Write-Host "✗ helm missing" -ForegroundColor Red; $missing = 1 } else { Write-Host "✓ helm found" -ForegroundColor Green }
+    if (-not (Get-Command kubeseal -ErrorAction SilentlyContinue)) { Write-Host "✗ kubeseal missing" -ForegroundColor Red; $missing = 1 } else { Write-Host "✓ kubeseal found" -ForegroundColor Green }
+    if (-not (Get-Command ssh -ErrorAction SilentlyContinue)) { Write-Host "✗ ssh missing" -ForegroundColor Red; $missing = 1 } else { Write-Host "✓ ssh found" -ForegroundColor Green }
+    if (-not (Get-Command tailscale -ErrorAction SilentlyContinue)) { Write-Host "✗ tailscale missing" -ForegroundColor Red; $missing = 1 } else { Write-Host "✓ tailscale found" -ForegroundColor Green }
+    if (-not (Get-Command sed -ErrorAction SilentlyContinue)) { Write-Host "✗ sed missing" -ForegroundColor Red; $missing = 1 } else { Write-Host "✓ sed found" -ForegroundColor Green }
+    if (-not (Get-Command grep -ErrorAction SilentlyContinue)) { Write-Host "✗ grep missing" -ForegroundColor Red; $missing = 1 } else { Write-Host "✓ grep found" -ForegroundColor Green }
+    if ($missing -eq 0) { Write-Host "`nAll dependencies satisfied ✓" -ForegroundColor Green; exit 0 } else { Write-Host "`nSome dependencies missing" -ForegroundColor Yellow; exit 1 }
 
 # Dependency check for Linux/macOS (bash)
 _dep-check-linux:
     #!/usr/bin/env bash
-    set -euo pipefail
-    
     missing=0
-    
     echo "Checking dependencies..."
-    
-    # Check kubectl
-    if command -v kubectl &> /dev/null; then
-        kubectlOutput=$(kubectl version --client 2>/dev/null | grep "Client Version")
-        if [[ $kubectlOutput =~ v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-            version="${BASH_REMATCH[0]}"
-            echo "✓ kubectl found ($version)"
-        else
-            echo "✗ kubectl found but version extraction failed - please verify installation"
-            missing=1
-        fi
-    else
-        echo "✗ kubectl missing - install from https://kubernetes.io/docs/tasks/tools/"
-        missing=1
-    fi
-    
-    # Check helm
-    if command -v helm &> /dev/null; then
-        helmOutput=$(helm version --short 2>/dev/null)
-        if [[ $helmOutput =~ v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-            version="${BASH_REMATCH[0]}"
-            echo "✓ helm found ($version)"
-        else
-            echo "✗ helm found but version extraction failed - please verify installation"
-            missing=1
-        fi
-    else
-        echo "✗ helm missing - install from https://helm.sh/docs/intro/install/"
-        missing=1
-    fi
-    
-    # Check kubeseal
-    if command -v kubeseal &> /dev/null; then
-        kubesealOutput=$(kubeseal --version 2>&1)
-        if [[ $kubesealOutput =~ ([0-9]+\.[0-9]+\.[0-9]+) ]]; then
-            version="v${BASH_REMATCH[1]}"
-            echo "✓ kubeseal found ($version)"
-        else
-            echo "✗ kubeseal found but version extraction failed - please verify installation"
-            missing=1
-        fi
-    else
-        echo "✗ kubeseal missing - install from https://github.com/bitnami-labs/sealed-secrets/releases"
-        missing=1
-    fi
-    
-    # Summary
-    echo ""
-    if [ $missing -eq 0 ]; then
-        echo "All dependencies satisfied ✓"
-        exit 0
-    else
-        echo "Some dependencies are missing or have issues. Please fix them and try again."
-        exit 1
-    fi
+    command -v kubectl &> /dev/null && echo "✓ kubectl found" || { echo "✗ kubectl missing"; missing=1; }
+    command -v helm &> /dev/null && echo "✓ helm found" || { echo "✗ helm missing"; missing=1; }
+    command -v kubeseal &> /dev/null && echo "✓ kubeseal found" || { echo "✗ kubeseal missing"; missing=1; }
+    command -v ssh &> /dev/null && echo "✓ ssh found" || { echo "✗ ssh missing"; missing=1; }
+    command -v tailscale &> /dev/null && echo "✓ tailscale found" || { echo "✗ tailscale missing"; missing=1; }
+    command -v sed &> /dev/null && echo "✓ sed found" || { echo "✗ sed missing"; missing=1; }
+    command -v grep &> /dev/null && echo "✓ grep found" || { echo "✗ grep missing"; missing=1; }
+    [ $missing -eq 0 ] && { echo ""; echo "All dependencies satisfied ✓"; exit 0; } || { echo ""; echo "Some dependencies missing"; exit 1; }
 
 # macOS uses the same check as Linux
 _dep-check-macos:
     @just _dep-check-linux
+
+# Verify tailscale connectivity to perseus
+check-tailscale:
+    tailscale status | grep perseus
+
+# Fetch kubeconfig from perseus and configure for remote access
+get-kubeconfig: dep-check check-tailscale
+    mkdir -p .kube
+    scp root@perseus:/etc/rancher/rke2/rke2.yaml .kube/config
+    sed -i 's|https://127\.0\.0\.1:6443|https://perseus:6443|g' .kube/config
 
 # === Future Recipes (to be implemented) ===
 # deploy-cert-manager:
