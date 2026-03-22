@@ -1,0 +1,12 @@
+# CloudNativePG Operator
+# Install via Helm — this file documents the install command only.
+# The operator is NOT applied via kubectl — run the install command below.
+#
+# helm repo add cnpg https://cloudnative-pg.github.io/charts
+# helm repo update
+# helm install cnpg cnpg/cloudnative-pg \
+#   --namespace cnpg-system \
+#   --create-namespace
+#
+# Verify:
+#   kubectl get deployment -n cnpg-system cnpg-cloudnative-pg

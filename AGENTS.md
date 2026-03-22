@@ -30,7 +30,8 @@ a single-node (expanding to 3-node HA) Kubernetes cluster running on RackNerd KV
 ├── cert-manager/          # ClusterIssuer for Let's Encrypt
 ├── ingress-nginx/         # RKE2 ingress-nginx hostNetwork config
 ├── podinfo/               # Demo app at podinfo.rk6.dev
-└── pornogurmani/          # Placeholder site for pornogurmani.com
+├── pornogurmani/          # Placeholder site for pornogurmani.com
+└── postgresql/            # CloudNativePG-managed PostgreSQL cluster
 ```
 
 ## Conventions
@@ -56,6 +57,7 @@ a single-node (expanding to 3-node HA) Kubernetes cluster running on RackNerd KV
 2. `cert-manager/` — install via Helm, then `kubectl apply -f cluster-issuer.yaml`
 3. `podinfo/` — smoke test for ingress + TLS
 4. `pornogurmani/` — placeholder site
+5. `postgresql/` — install CNPG operator via Helm, apply namespace, SealedSecret, then Cluster CR
 
 ## Important Notes
 

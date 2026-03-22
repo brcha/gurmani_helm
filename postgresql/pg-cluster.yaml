@@ -1,0 +1,30 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: pg-cluster
+  namespace: postgres
+spec:
+  # Single instance for now — bump to 3 after deimos and phobos join the cluster.
+  # CNPG will automatically distribute replicas across nodes via pod anti-affinity.
+  instances: 1
+
+  postgresql:
+    parameters:
+      max_connections: "200"
+      shared_buffers: "256MB"
+
+  storage:
+    size: 20Gi
+    storageClass: longhorn
+
+  bootstrap:
+    initdb:
+      database: appdb
+      owner: appuser
+      secret:
+        name: pg-superuser-secret
+
+  # Affinity: once HA is active (instances: 3), this ensures replicas land on different nodes.
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname
