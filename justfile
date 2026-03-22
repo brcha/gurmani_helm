@@ -19,9 +19,19 @@ _dep-check-windows:
     
     # Check kubectl
     if (Get-Command kubectl -ErrorAction SilentlyContinue) {
-        $version = (kubectl version --client --short 2>$null) -replace 'Client Version: ', ''
-        if (-not $version) { $version = "installed" }
-        Write-Host "✓ kubectl found ($version)" -ForegroundColor Green
+        try {
+            $kubectlOutput = kubectl version --client 2>$null | Select-String "Client Version"
+            if ($kubectlOutput -and ($kubectlOutput -match 'v\d+\.\d+\.\d+')) {
+                $version = $Matches[0]
+                Write-Host "✓ kubectl found ($version)" -ForegroundColor Green
+            } else {
+                Write-Host "✗ kubectl found but version extraction failed - please verify installation" -ForegroundColor Red
+                $missing = 1
+            }
+        } catch {
+            Write-Host "✗ kubectl found but version extraction failed - please verify installation" -ForegroundColor Red
+            $missing = 1
+        }
     } else {
         Write-Host "✗ kubectl missing - install from https://kubernetes.io/docs/tasks/tools/" -ForegroundColor Red
         $missing = 1
@@ -29,9 +39,19 @@ _dep-check-windows:
     
     # Check helm
     if (Get-Command helm -ErrorAction SilentlyContinue) {
-        $version = (helm version --short 2>$null) -replace 'v', ''
-        if (-not $version) { $version = "installed" }
-        Write-Host "✓ helm found ($version)" -ForegroundColor Green
+        try {
+            $helmOutput = helm version --short 2>$null
+            if ($helmOutput -match 'v\d+\.\d+\.\d+') {
+                $version = $Matches[0]
+                Write-Host "✓ helm found ($version)" -ForegroundColor Green
+            } else {
+                Write-Host "✗ helm found but version extraction failed - please verify installation" -ForegroundColor Red
+                $missing = 1
+            }
+        } catch {
+            Write-Host "✗ helm found but version extraction failed - please verify installation" -ForegroundColor Red
+            $missing = 1
+        }
     } else {
         Write-Host "✗ helm missing - install from https://helm.sh/docs/intro/install/" -ForegroundColor Red
         $missing = 1
@@ -39,9 +59,19 @@ _dep-check-windows:
     
     # Check kubeseal
     if (Get-Command kubeseal -ErrorAction SilentlyContinue) {
-        $version = (kubeseal --version 2>&1 | Select-Object -First 1)
-        if (-not $version) { $version = "installed" }
-        Write-Host "✓ kubeseal found ($version)" -ForegroundColor Green
+        try {
+            $kubesealOutput = kubeseal --version 2>&1
+            if ($kubesealOutput -match '(\d+\.\d+\.\d+)') {
+                $version = "v" + $Matches[1]
+                Write-Host "✓ kubeseal found ($version)" -ForegroundColor Green
+            } else {
+                Write-Host "✗ kubeseal found but version extraction failed - please verify installation" -ForegroundColor Red
+                $missing = 1
+            }
+        } catch {
+            Write-Host "✗ kubeseal found but version extraction failed - please verify installation" -ForegroundColor Red
+            $missing = 1
+        }
     } else {
         Write-Host "✗ kubeseal missing - install from https://github.com/bitnami-labs/sealed-secrets/releases" -ForegroundColor Red
         $missing = 1
@@ -53,7 +83,7 @@ _dep-check-windows:
         Write-Host "All dependencies satisfied ✓" -ForegroundColor Green
         exit 0
     } else {
-        Write-Host "Some dependencies are missing. Please install them and try again." -ForegroundColor Yellow
+        Write-Host "Some dependencies are missing or have issues. Please fix them and try again." -ForegroundColor Yellow
         exit 1
     }
 
@@ -68,8 +98,14 @@ _dep-check-linux:
     
     # Check kubectl
     if command -v kubectl &> /dev/null; then
-        version=$(kubectl version --client --short 2>/dev/null | sed 's/Client Version: //' || echo "installed")
-        echo "✓ kubectl found ($version)"
+        kubectlOutput=$(kubectl version --client 2>/dev/null | grep "Client Version")
+        if [[ $kubectlOutput =~ v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            version="${BASH_REMATCH[0]}"
+            echo "✓ kubectl found ($version)"
+        else
+            echo "✗ kubectl found but version extraction failed - please verify installation"
+            missing=1
+        fi
     else
         echo "✗ kubectl missing - install from https://kubernetes.io/docs/tasks/tools/"
         missing=1
@@ -77,8 +113,14 @@ _dep-check-linux:
     
     # Check helm
     if command -v helm &> /dev/null; then
-        version=$(helm version --short 2>/dev/null | sed 's/v//' || echo "installed")
-        echo "✓ helm found ($version)"
+        helmOutput=$(helm version --short 2>/dev/null)
+        if [[ $helmOutput =~ v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            version="${BASH_REMATCH[0]}"
+            echo "✓ helm found ($version)"
+        else
+            echo "✗ helm found but version extraction failed - please verify installation"
+            missing=1
+        fi
     else
         echo "✗ helm missing - install from https://helm.sh/docs/intro/install/"
         missing=1
@@ -86,8 +128,14 @@ _dep-check-linux:
     
     # Check kubeseal
     if command -v kubeseal &> /dev/null; then
-        version=$(kubeseal --version 2>&1 | head -n1 || echo "installed")
-        echo "✓ kubeseal found ($version)"
+        kubesealOutput=$(kubeseal --version 2>&1)
+        if [[ $kubesealOutput =~ ([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+            version="v${BASH_REMATCH[1]}"
+            echo "✓ kubeseal found ($version)"
+        else
+            echo "✗ kubeseal found but version extraction failed - please verify installation"
+            missing=1
+        fi
     else
         echo "✗ kubeseal missing - install from https://github.com/bitnami-labs/sealed-secrets/releases"
         missing=1
@@ -99,7 +147,7 @@ _dep-check-linux:
         echo "All dependencies satisfied ✓"
         exit 0
     else
-        echo "Some dependencies are missing. Please install them and try again."
+        echo "Some dependencies are missing or have issues. Please fix them and try again."
         exit 1
     fi
 
